@@ -77,7 +77,11 @@ fun Project.generateMoveDirMap(
     variantName: String
 ): Map<String, String> {
     pluginParams.moveDir?.let {
-        return it
+        return it.toList().sortedByDescending {
+            it.first.count { it == File.separatorChar }
+        }.let {
+            hashMapOf<String, String>().apply { putAll(it) }
+        }
     }
     // generate a map if user not set
 
@@ -108,9 +112,10 @@ fun Project.generateMoveDirMap(
         pluginParams.randomNameLengthRange.second,
     )
     return hashMapOf<String, String>().apply {
-        sourceFilePackagePathList.forEachIndexed { index, sourceFilePackagePath ->
-            this[sourceFilePackagePath] = targetDirList[index]
-        }
+        sourceFilePackagePathList
+            .forEachIndexed { index, sourceFilePackagePath ->
+                this[sourceFilePackagePath] = targetDirList[index]
+            }
     }
 }
 

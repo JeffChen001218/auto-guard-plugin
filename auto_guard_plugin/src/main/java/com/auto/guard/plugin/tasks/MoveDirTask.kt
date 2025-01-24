@@ -71,40 +71,45 @@ open class MoveDirTask @Inject constructor(
             val moveDirs = mutableListOf<File>()
             moveDirs.addAll(aidlDirs)
             moveDirs.addAll(javaDirs)
-            files(dirs).asFileTree.forEach {
-                it.replaceText(moveFile, manifestPackage)
-            }
+            files(dirs).asFileTree
+                .sortedByDescending { it.absolutePath.count { it == File.separatorChar } }
+                .forEach {
+                    it.replaceText(moveFile, manifestPackage)
+                }
 
             // 2、开始移动目录
-            moveFile.forEach { (oldPath, newPath) ->
-                val oldPackagePath = oldPath.replace(".", File.separator)
-                for (javaDir in moveDirs) {
-                    if ("${oldPath}.${javaDir.nameWithoutExtension}" in excludeClzPathList) {
-                        // excluded by user config
-                        continue
-                    }
-                    val oldDir = File(javaDir, oldPackagePath)
-                    if (!oldDir.exists()) {
-                        continue
-                    }
-                    if (oldPath == manifestPackage) {
-                        //包名目录下的直接子类移动位置，需要重新手动导入R类及BuildConfig类(如果有用到的话)
-                        oldDir.listFiles { f -> !f.isDirectory }?.forEach { file ->
-                            file.insertImportXxxIfAbsent(oldPath)
+            moveDirs.forEach moveDirs@{ javaSourceDir ->
+                moveFile.toList()
+                    .sortedByDescending { it.first.count { it == '.' } }
+                    .forEach { (oldPath, newPath) ->
+                        val oldPackagePath = oldPath.replace(".", File.separator)
+                        if ("${oldPath}.${javaSourceDir.nameWithoutExtension}" in excludeClzPathList) {
+                            // excluded by user config
+                            return@forEach
+                        }
+                        val oldDir = File(javaSourceDir, oldPackagePath)
+                        if (!oldDir.exists()) {
+                            return@forEach
+                        }
+                        if (oldPath == manifestPackage) {
+                            //包名目录下的直接子类移动位置，需要重新手动导入R类及BuildConfig类(如果有用到的话)
+                            oldDir.listFiles { f -> !f.isDirectory }?.forEach { file ->
+                                file.insertImportXxxIfAbsent(oldPath)
+                            }
+                        }
+                        val oldRelativePath = oldPath.replace(".", File.separator)
+                        val newRelativePath = newPath.replace(".", File.separator)
+                        println("move pkg ${oldRelativePath} to ${newRelativePath}")
+                        oldDir.allFiles().forEach {
+                            val toPath = it.absolutePath.replace(
+                                "${File.separator}$oldRelativePath${File.separator}",
+                                "${File.separator}$newRelativePath${File.separator}"
+                            )
+                            val toFilename = File(toPath)
+                            if (!toFilename.exists()) toFilename.parentFile.mkdirs()
+                            it.renameTo(toFilename)
                         }
                     }
-                    val oldRelativePath = oldPath.replace(".", File.separator)
-                    val newRelativePath = newPath.replace(".", File.separator)
-                    oldDir.allFiles().forEach {
-                        val toPath = it.absolutePath.replace(
-                            "${File.separator}$oldRelativePath${File.separator}",
-                            "${File.separator}$newRelativePath${File.separator}"
-                        )
-                        val toFilename = File(toPath)
-                        if (!toFilename.exists()) toFilename.parentFile.mkdirs()
-                        it.renameTo(toFilename)
-                    }
-                }
             }
         }
 
@@ -123,7 +128,7 @@ open class MoveDirTask @Inject constructor(
         private fun File.replaceText(map: Map<String, String>, manifestPackage: String?) {
             var replaceText = readText()
             map.forEach { (oldPath, newPath) ->
-                println("replace ${oldPath} to ${newPath}")
+                // println("replace ${oldPath} to ${newPath}")
                 replaceText =
                     if (name == "AndroidManifest.xml" && oldPath == manifestPackage) {
                         replaceText.replaceWords("$oldPath.", "$newPath.")
