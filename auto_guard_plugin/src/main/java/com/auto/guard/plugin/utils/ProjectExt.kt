@@ -95,7 +95,10 @@ fun Project.generateMoveDirMap(
                 relativePath.replace(File.separator, ".")
             }
             .distinct()
-            .toList()
+            .sortedByDescending { it.count { it == '.' } }
+            .toList().also {
+                it.forEach { println("find pkg:${it}") }
+            }
     }
 
     val targetDirList = sourceFilePackagePathList.generateRandomPackagePathList(

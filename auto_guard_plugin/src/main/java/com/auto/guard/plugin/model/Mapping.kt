@@ -123,8 +123,8 @@ class Mapping constructor(
             if (configuredObfuscatedPackage != null) {
                 // find configured moveDir map
                 dirMapping[rawPackage] = "${configuredObfuscatedPackage}"
-                classMapping[rawClassPath] = "${configuredObfuscatedPackage}.${obfuscatedClassName}"
                 obfuscateClassPath = "${configuredObfuscatedPackage}.${obfuscatedClassName}"
+                classMapping[rawClassPath] = obfuscateClassPath
             } else {
                 // generate new package path map
                 val obfuscatePackage = obfuscatePackage(rawPackage)
