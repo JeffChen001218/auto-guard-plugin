@@ -1,22 +1,12 @@
-## auto-guard-plugin
+package com.auto.guard.plugin.extensions
 
-Android自动混淆插件，基于[XmlClassGuard](https://github.com/liujingxing/XmlClassGuard)
+import java.io.File
 
-### 更新内容
-
-- 在不配置moveDir参数的情况下，新增自动生成混淆映射的能力（即默认全局混淆）
-- 新增了一些配置参数excludeClassList、randomFolderLevelRange、randomNameLengthRange
-
-### 完整Gradle配置示例（app模块下的`build.gradle.kts`文件）
-
-```kotlin
-import com.auto.guard.plugin.extensions.AutoGuardExtension
-
-configure<AutoGuardExtension> {
+open class AutoGuardExtension {
 
     /**
      * （可选）
-     * 自定义代码包路径映射表（暂不支持内部类）
+     * 自定义代码包路径映射表
      * 新增功能：
      *      1. 若配置为null，会自动生成映射表，并输出到mappingFile
      *      2. 会将此映射表应用到 资源xml中Class文件路径 的混淆规则
@@ -26,7 +16,7 @@ configure<AutoGuardExtension> {
      *      )
      * 默认：null(Map<String,String>?)（自动全局扫描，自动生成映射）
      */
-    moveDir = null
+    var moveDir: Map<String, String>? = null
 
     /**
      * (可选)
@@ -35,35 +25,35 @@ configure<AutoGuardExtension> {
      *      example:listOf("the.path.of.MyClz", "MyClz", "the.path.of")
      * 默认：emptyList()（不排除任何类，全都参与混淆）
      */
-    excludes = emptyList<String>()
+    var excludes: List<String> = emptyList()
 
     /**
      * （可选）
      * 自动生成代码映射路径时，随机文件夹的层级范围
      * 默认：5 to 10
      */
-    randomFolderLevelRange = 5 to 10
+    var randomFolderLevelRange = 5 to 10
 
     /**
      * （可选）
      * 自动生成代码映射路径时，随机文件(夹)名的长度
      * 默认：5 to 10
      */
-    randomNameLengthRange = 5 to 10
+    var randomNameLengthRange = 5 to 10
 
     /**
      * （可选）
      * 更换Manifest中的包名映射
      * 默认：null(Map<String, String>?)（不修改包名）
      */
-    packageChange = null
+    var packageChange: Map<String, String>? = null
 
     /**
      * （可选）
      * 混淆映射文件
      * 默认：null(File?)（在项目根目录下创建auto-guard-mapping.txt）
      */
-    mappingFile = null
+    var mappingFile: File? = null
 
     /**
      * （可选）
@@ -71,7 +61,7 @@ configure<AutoGuardExtension> {
      * 是的话，要求你在AutoGuard前依赖AabResGuard插件
      * 默认：false（不启用）
      */
-    findAndConstraintReferencedIds = false
+    var findAndConstraintReferencedIds = false
 
     /**
      * （可选）
@@ -79,12 +69,8 @@ configure<AutoGuardExtension> {
      * 是的话，要求你在AutoGuard前依赖AabResGuard插件
      * 默认：false（不启用）
      */
-    findAabConstraintReferencedIds = false
+    var findAabConstraintReferencedIds = false
+
+// ========================= internal fields ==============================
+
 }
-```
-
-### TODO
-
-- [ ] 新增DataBinding xml的混淆能力
-- [ ] 修改文件md5
-- [ ] 自动插入混淆代码

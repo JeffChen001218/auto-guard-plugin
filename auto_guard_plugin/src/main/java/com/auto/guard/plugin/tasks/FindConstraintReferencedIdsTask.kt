@@ -1,11 +1,12 @@
 package com.auto.guard.plugin.tasks
 
-import com.bytedance.android.plugin.extensions.AabResGuardExtension
-import com.tencent.gradle.AndResGuardExtension
+import com.auto.guard.plugin.extensions.AutoGuardExtension
 import com.auto.guard.plugin.model.aabResGuard
 import com.auto.guard.plugin.model.andResGuard
 import com.auto.guard.plugin.utils.findLayoutDirs
 import com.auto.guard.plugin.utils.isAndroidProject
+import com.bytedance.android.plugin.extensions.AabResGuardExtension
+import com.tencent.gradle.AndResGuardExtension
 import groovy.util.Node
 import groovy.xml.XmlParser
 import org.gradle.api.DefaultTask
@@ -16,8 +17,9 @@ import javax.inject.Inject
 
 
 open class FindConstraintReferencedIdsTask @Inject constructor(
-    private val extensionName: String,
-    private val variantName: String,
+    val extensionName: String,
+    val pluginParams: AutoGuardExtension,
+    val variantName: String,
 ) : DefaultTask() {
 
     init {

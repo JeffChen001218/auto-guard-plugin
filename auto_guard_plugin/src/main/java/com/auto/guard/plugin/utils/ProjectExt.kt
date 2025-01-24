@@ -1,6 +1,7 @@
 package com.auto.guard.plugin.utils
 
 import com.android.build.gradle.BaseExtension
+import com.auto.guard.plugin.extensions.AutoGuardExtension
 import com.auto.guard.plugin.model.ClassInfo
 import groovy.util.Node
 import groovy.util.NodeList
@@ -34,7 +35,7 @@ fun Project.findPackage(): String {
 }
 
 //返回java/kotlin代码目录,可能有多个
-fun Project.javaDirs(variantName: String): List<File> {
+fun Project.sourceSetDirs(variantName: String): List<File> {
     val sourceSet = (extensions.getByName("android") as BaseExtension).sourceSets
     val nameSet = mutableSetOf<String>()
     nameSet.add("main")
@@ -68,6 +69,46 @@ fun Project.aidlDirs(variantName: String): List<File> {
         }
     }
     return javaDirs
+}
+
+
+fun Project.generateMoveDirMap(
+    pluginParams: AutoGuardExtension,
+    variantName: String
+): Map<String, String> {
+    pluginParams.moveDir?.let {
+        return it
+    }
+    // generate a map if user not set
+
+    // get all source code dir list
+    val sourceSetsDirs = project.sourceSetDirs(variantName)
+
+    // filter all target extension(default:java/kotlin) code file path
+    val sourceFilePackagePathList = sourceSetsDirs.flatMap { sourceRoot ->
+        sourceRoot.walkTopDown()
+            .filter {
+                it.isFile && (it.extension == "java" || it.extension == "kt")
+            }
+            .map { file ->
+                val relativePath = file.parentFile.relativeTo(sourceRoot).path
+                relativePath.replace(File.separator, ".")
+            }
+            .distinct()
+            .toList()
+    }
+
+    val targetDirList = sourceFilePackagePathList.generateRandomPackagePathList(
+        pluginParams.randomFolderLevelRange.first,
+        pluginParams.randomFolderLevelRange.second,
+        pluginParams.randomNameLengthRange.first,
+        pluginParams.randomNameLengthRange.second,
+    )
+    return hashMapOf<String, String>().apply {
+        sourceFilePackagePathList.forEachIndexed { index, sourceFilePackagePath ->
+            this[sourceFilePackagePath] = targetDirList[index]
+        }
+    }
 }
 
 fun Project.findLayoutDirs(variantName: String) = findXmlDirs(variantName, "layout")
@@ -130,7 +171,7 @@ fun Project.isAndroidProject() =
 //查找dir所在的Project，dir不存在，返回null
 fun Project.findLocationProject(dir: String, variantName: String): Project? {
     val packageName = dir.replace(".", File.separator)
-    val javaDirs = javaDirs(variantName)
+    val javaDirs = sourceSetDirs(variantName)
     if (javaDirs.any { File(it, packageName).exists() }) {
         return this
     }

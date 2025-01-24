@@ -3,21 +3,24 @@ package com.auto.guard.plugin.model
 import com.auto.guard.plugin.utils.KtFileParser
 import com.auto.guard.plugin.utils.findLocationProject
 import com.auto.guard.plugin.utils.findPackage
-import com.auto.guard.plugin.utils.generateRandomFolderName
+import com.auto.guard.plugin.utils.generateRandomName
+import com.auto.guard.plugin.utils.generateRandomPackagePath
 import com.auto.guard.plugin.utils.getDirPath
-import com.auto.guard.plugin.utils.inClassNameBlackList
-import com.auto.guard.plugin.utils.inPackageNameBlackList
 import com.auto.guard.plugin.utils.insertImportXxxIfAbsent
-import com.auto.guard.plugin.utils.javaDirs
 import com.auto.guard.plugin.utils.removeSuffix
-import com.auto.guard.plugin.utils.toUpperLetterStr
+import com.auto.guard.plugin.utils.sourceSetDirs
 import org.gradle.api.Project
 import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
 import java.io.Writer
 
-class Mapping {
+class Mapping constructor(
+    val folderLevelRange: Pair<Int, Int>,
+    val nameLengthRange: Pair<Int, Int>,
+    val moveDirMap: Map<String, String>,
+    val excludeClzPathList: List<String>
+) {
 
     companion object {
         internal const val DIR_MAPPING = "dir mapping:"
@@ -48,7 +51,7 @@ class Mapping {
             val manifestPackage = locationProject.findPackage()
             //过滤目录的直接子文件
             val dirPath = rawDir.replace(".", File.separator) //xx.xx  不带文件名
-            val childFiles = locationProject.javaDirs(variantName).flatMap {
+            val childFiles = locationProject.sourceSetDirs(variantName).flatMap {
                 File(it, dirPath).listFiles { f ->
                     val filename = f.name
                     f.isFile && (filename.endsWith(".java") || filename.endsWith(".kt"))
@@ -62,6 +65,7 @@ class Mapping {
                 if (rawDir == manifestPackage) {
                     file.insertImportXxxIfAbsent(manifestPackage)
                 }
+                if (rawClassPath in excludeClzPathList) continue
                 val obfuscatePath = obfuscatePath(rawClassPath)  //混淆后 xx.Xxx
                 val obfuscateRelativePath = obfuscatePath.replace(".", File.separator) //混淆后 xx/Xxx
                 val rawRelativePath = rawClassPath.replace(".", File.separator) //原始 xx/Xxx
@@ -93,7 +97,9 @@ class Mapping {
         return classMapped
     }
 
-    fun isObfuscated(rawClassPath: String) = classMapping.containsValue(rawClassPath)
+    fun isObfuscated(rawClassPath: String) =
+        classMapping.containsValue(rawClassPath)
+//        classMapping.containsValue(rawClassPath) || rawClassPath in excludeClzPathList
 
     //混淆包名+类名，返回混淆后的包名+类名
     fun obfuscatePath(classPath: String): String {
@@ -108,9 +114,23 @@ class Mapping {
         var obfuscateClassPath = classMapping[rawClassPath]
         if (obfuscateClassPath == null) {
             val rawPackage = rawClassPath.getDirPath()
-            val obfuscatePackage = obfuscatePackage(rawPackage)
-            obfuscateClassPath = "$obfuscatePackage.${generateObfuscateClassName()}"
-            classMapping[rawClassPath] = obfuscateClassPath
+            val obfuscatedClassName = generateRandomName(
+                nameLengthRange.first,
+                nameLengthRange.second,
+                firstLetterCaps = true,
+            )
+            val configuredObfuscatedPackage = moveDirMap[rawPackage]
+            if (configuredObfuscatedPackage != null) {
+                // find configured moveDir map
+                dirMapping[rawPackage] = "${configuredObfuscatedPackage}"
+                classMapping[rawClassPath] = "${configuredObfuscatedPackage}.${obfuscatedClassName}"
+                obfuscateClassPath = "${configuredObfuscatedPackage}.${obfuscatedClassName}"
+            } else {
+                // generate new package path map
+                val obfuscatePackage = obfuscatePackage(rawPackage)
+                obfuscateClassPath = "$obfuscatePackage.${obfuscatedClassName}"
+                classMapping[rawClassPath] = obfuscateClassPath
+            }
         }
         return if (innerClassName != null) "$obfuscateClassPath\$$innerClassName" else obfuscateClassPath
     }
@@ -139,29 +159,15 @@ class Mapping {
     private fun obfuscatePackage(rawPackage: String): String {
         var obfuscatePackage = dirMapping[rawPackage]
         if (obfuscatePackage == null) {
-            obfuscatePackage = generateObfuscatePackageName()
+            obfuscatePackage = generateRandomPackagePath(
+                folderLevelRange.first,
+                folderLevelRange.second,
+                nameLengthRange.first,
+                nameLengthRange.second,
+            )
             dirMapping[rawPackage] = obfuscatePackage
         }
         return obfuscatePackage
-    }
-
-    //生成混淆的包名
-    private fun generateObfuscatePackageName(): String {
-        while (true) {
-//            val obfuscatePackage = (++packageNameIndex).toLetterStr()
-            val obfuscatePackage = generateRandomFolderName()
-            if (!obfuscatePackage.inPackageNameBlackList()) //过滤黑名单
-                return obfuscatePackage
-        }
-    }
-
-    //生成混淆的类名
-    private fun generateObfuscateClassName(): String {
-        while (true) {
-            val obfuscateClassName = (++classIndex).toUpperLetterStr()
-            if (!obfuscateClassName.inClassNameBlackList()) //过滤黑名单
-                return obfuscateClassName
-        }
     }
 
     private fun isInnerClass(classPath: String): Boolean {

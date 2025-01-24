@@ -13,8 +13,14 @@ object MappingParser {
     private val UPPERCASE_PATTERN: Pattern = Pattern.compile("^[A-Z]+$")
     private val LOWER_PATTERN: Pattern = Pattern.compile("^[a-z]+$")
 
-    fun parse(mappingFile: File): Mapping {
-        val mapping = Mapping()
+    fun parse(
+        mappingFile: File,
+        folderLevelRange: Pair<Int, Int>,
+        nameLengthRange: Pair<Int, Int>,
+        moveDirMap: Map<String, String>,
+        excludeClzPathList: List<String>,
+    ): Mapping {
+        val mapping = Mapping(folderLevelRange, nameLengthRange, moveDirMap, excludeClzPathList)
         var isDir = true
         if (!mappingFile.exists()) return mapping
         var classIndex = -1L

@@ -4,6 +4,31 @@ import java.util.Random
 import java.util.regex.Pattern
 import kotlin.math.pow
 
+@JvmField
+// lowercase
+val letters = listOf(
+    "a", "b", "c", "d", "e", "f", "g",
+    "h", "i", "j", "k", "l", "m", "n",
+    "o", "p", "q", "r", "s", "t",
+    "u", "v", "w", "x", "y", "z"
+)
+
+@JvmField
+// uppercase
+val LETTERS = listOf(
+    "A", "B", "C", "D", "E", "F", "G",
+    "H", "I", "J", "K", "L", "M", "N",
+    "O", "P", "Q", "R", "S", "T",
+    "U", "V", "W", "X", "Y", "Z"
+)
+
+@JvmField
+// mixed lowercase and uppercase
+val Letters = mutableListOf<String>().apply {
+    addAll(letters)
+    addAll(LETTERS)
+}
+
 //移除后缀
 fun String.removeSuffix(): String {
     val index = lastIndexOf(".")
@@ -11,9 +36,11 @@ fun String.removeSuffix(): String {
 }
 
 //获取后缀
-fun String.getSuffix(): String {
+fun String.getSuffix(withPoint: Boolean = true): String {
     val index = lastIndexOf(".")
-    return if (index == -1) "" else substring(index)
+    return if (index == -1) "" else substring(index).let {
+        if (withPoint) it else it.removePrefix(".")
+    }
 }
 
 fun String.getDirPath(): String {
@@ -94,30 +121,69 @@ fun String.isWord(index: Int, oldValue: String): Boolean {
     return true
 }
 
-val letters = listOf(
-    "a", "b", "c", "d", "e", "f", "g",
-    "h", "i", "j", "k", "l", "m", "n",
-    "o", "p", "q", "r", "s", "t",
-    "u", "v", "w", "x", "y", "z"
-)
+fun List<String>.generateRandomPackagePathList(
+    minFolderLevel: Int,
+    maxFolderLevel: Int,
+    minNameLength: Int,
+    maxNameLength: Int,
+): List<String> {
+    val packagePathList = mutableListOf<String>()
+    while (packagePathList.size < this.size) {
+        var packagePath = ""
+        while (packagePath.isBlank() || packagePathList.contains(packagePath)) {
+            packagePath = generateRandomPackagePath(
+                minFolderLevel,
+                maxFolderLevel,
+                minNameLength,
+                maxNameLength,
+            )
+        }
+        packagePathList.add(packagePath)
+    }
+    return packagePathList
+}
 
-fun generateRandomFolderName(): String {
+fun generateRandomPackagePath(
+    minFolderLevel: Int,
+    maxFolderLevel: Int,
+    minNameLength: Int,
+    maxNameLength: Int,
+): String {
     var targetDir = ""
     val targetDirList = mutableListOf<String>()
     while (targetDir.isBlank() || targetDirList.contains(targetDir)) {
-        val targetDirLevel = 5 + Random().nextInt(6) // 5~10
+        val targetDirLevel =
+            minFolderLevel + Random().nextInt(maxFolderLevel - minFolderLevel + 1)
         val dirLevelStrList = mutableListOf<String>()
         while (dirLevelStrList.size < targetDirLevel) {
-            val levelStrLen = 5 + Random().nextInt(6) // 5~10
-            var levelStr = ""
-            while (levelStr.length < levelStrLen) {
-                levelStr += letters.random()
-            }
-            dirLevelStrList.add(levelStr)
+            dirLevelStrList.add(generateRandomName(minNameLength, maxNameLength))
         }
         targetDir = dirLevelStrList.joinToString(".")
     }
     return targetDir
+}
+
+fun generateRandomName(
+    minLength: Int,
+    maxLength: Int,
+    firstLetterCaps: Boolean = false
+): String {
+    val levelStrLen = minLength + Random().nextInt(maxLength + 1)
+    var randomName = ""
+    while (randomName.isBlank()
+        || randomName.length < levelStrLen
+        || randomName.inPackageNameBlackList()
+    ) {
+        randomName += letters.random()
+    }
+    return randomName.let {
+        if (firstLetterCaps) {
+            if (it.isEmpty()) it
+            else "${it.first().toUpperCase()}${it.removePrefix(it.first().toString())}"
+        } else {
+            it
+        }
+    }
 }
 
 // Long 转 大写字符串
