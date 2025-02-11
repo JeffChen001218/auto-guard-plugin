@@ -4,6 +4,7 @@ import com.auto.guard.plugin.extensions.AutoGuardExtension
 import com.auto.guard.plugin.utils.findXmlDirs
 import com.auto.guard.plugin.utils.generateRandomName
 import com.auto.guard.plugin.utils.manifestFile
+import com.auto.guard.plugin.utils.resDirs
 import com.auto.guard.plugin.utils.sourceSetDirs
 import org.gradle.api.DefaultTask
 import org.gradle.api.Project
@@ -56,22 +57,24 @@ open class XmlBindingGuardTask @Inject constructor(
 
             // 遍历 所有 XML 文件
             resDirNames.forEach { resDirName ->
-                val resDirs = task.project.findXmlDirs(variantName, resDirName)
-                val resFiles = resDirs.flatMap {
+                val curTypeResFiles = task.project.findXmlDirs(variantName, resDirName).flatMap {
                     it.listFiles { file -> file.isFile }?.toList() ?: emptyList()
                 }.sortedByDescending { it.name.length }
-                val allResFiles = resDirs.flatMap {
-                    it.listFiles { file -> file.isFile }?.toList() ?: emptyList()
+
+                val allResFiles = task.project.resDirs(variantName).flatMap {
+                    it.walkTopDown().filter { file -> file.isFile }.toList()
                 }.sortedByDescending { it.name.length }
+
                 val manifestFile = task.project.manifestFile()
-                resFiles.forEach { curResFile ->
+
+                curTypeResFiles.forEach { curTypeResFile ->
                     // 生成随机文件名
-                    val oldName = curResFile.nameWithoutExtension
-                    val ext = curResFile.extension
+                    val oldName = curTypeResFile.nameWithoutExtension
+                    val ext = curTypeResFile.extension
                     val newName = generateRandomName(resDirName)
                     // 重命名文件
-                    val newFile = File(curResFile.parent, "${newName}.${ext}")
-                    curResFile.renameTo(newFile)
+                    val newFile = File(curTypeResFile.parent, "${newName}.${ext}")
+                    curTypeResFile.renameTo(newFile)
 
                     // 1. 替换 @res/xxx
                     val oldAtRef = "@${resDirName.resType()}/$oldName"
@@ -117,7 +120,7 @@ open class XmlBindingGuardTask @Inject constructor(
                         }
                     }
 
-                    println("rename xml: $oldName -> $newName")
+                    println("rename res file: $oldName -> $newName")
                 }
             }
         }
@@ -153,6 +156,13 @@ open class XmlBindingGuardTask @Inject constructor(
         // 替换文件内容中的字符串
         fun replaceInFile(file: File, oldText: String, newText: String) {
             if (!file.exists()) {
+                return
+            }
+            if (file.extension != "xml" &&
+                file.extension != "kt" &&
+                file.extension != "java" &&
+                file.extension != "aidl"
+            ) {
                 return
             }
             val content = file.readText()
