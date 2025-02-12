@@ -5,7 +5,9 @@ Android自动混淆插件，基于[XmlClassGuard](https://github.com/liujingxing
 ### 更新内容
 
 - 在不配置moveDir参数的情况下，新增自动生成混淆映射的能力（即默认全局混淆）
-- 新增了一些配置参数excludeClassList、randomFolderLevelRange、randomNameLengthRange
+- 新增了一些配置参数<u>excludeClassList</u>(暂不可用)、randomFolderLevelRange、randomNameLengthRange
+- 新增修改资源文件名称能力（适配layout DataBinding引用修改）
+- 新增修改资源文件md5的能力。
 
 ### 完整Gradle配置示例（app模块下的`build.gradle.kts`文件）
 
@@ -85,6 +87,5 @@ configure<AutoGuardExtension> {
 
 ### TODO
 
-- [ ] 新增DataBinding xml的混淆能力
-- [ ] 修改文件md5
 - [ ] 自动插入混淆代码
+- [ ] 修复excludeClassList参数不生效问题
