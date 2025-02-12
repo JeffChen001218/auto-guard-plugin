@@ -12,7 +12,7 @@ import org.gradle.api.tasks.TaskAction
 import java.io.File
 import javax.inject.Inject
 
-open class XmlBindingGuardTask @Inject constructor(
+open class RenameResTask @Inject constructor(
     val pluginParams: AutoGuardExtension,
     val variantName: String,
 ) : DefaultTask() {
@@ -47,6 +47,7 @@ open class XmlBindingGuardTask @Inject constructor(
                 "color",
                 "drawable",
                 "layout",
+                "mipmap",
                 "navigation",
                 "raw",
                 "values",
@@ -75,6 +76,16 @@ open class XmlBindingGuardTask @Inject constructor(
                     // 重命名文件
                     val newFile = File(curTypeResFile.parent, "${newName}.${ext}")
                     curTypeResFile.renameTo(newFile)
+                    if (resDirName.resType() == "drawable" ||
+                        resDirName.resType() == "mipmap"
+                    ) {
+                        // 不同文件夹下的同名图片资源，应更改为相同的名字
+                        curTypeResFiles.forEach {
+                            if (it.name==curTypeResFile.name){
+                                it.renameTo(File(it.parent, "${newName}.${ext}"))
+                            }
+                        }
+                    }
 
                     // 1. 替换 @res/xxx
                     val oldAtRef = "@${resDirName.resType()}/$oldName"

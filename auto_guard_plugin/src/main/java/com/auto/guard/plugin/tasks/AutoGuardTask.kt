@@ -54,7 +54,7 @@ open class AutoGuardTask @Inject constructor(
         ).execute()
 
         // 5. execute XmlBindingGuardTask
-        XmlBindingGuardTask.Proxy(
+        RenameResTask.Proxy(
             this,
             project,
             pluginParams,
