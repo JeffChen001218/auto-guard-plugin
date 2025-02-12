@@ -60,6 +60,14 @@ open class AutoGuardTask @Inject constructor(
             pluginParams,
             variantName
         ).execute()
+
+        // 6. execute ChangeResMd5Task
+        ChangeResMd5Task.Proxy(
+            this,
+            project,
+            pluginParams,
+            variantName
+        ).execute()
     }
 
 }
