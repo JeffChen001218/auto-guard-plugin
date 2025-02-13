@@ -62,10 +62,6 @@ open class RenameResTask @Inject constructor(
                     it.listFiles { file -> file.isFile }?.toList() ?: emptyList()
                 }.sortedByDescending { it.name.length }
 
-                val allResFiles = task.project.resDirs(variantName).flatMap {
-                    it.walkTopDown().filter { file -> file.isFile }.toList()
-                }.sortedByDescending { it.name.length }
-
                 val manifestFile = task.project.manifestFile()
 
                 curTypeResFiles.forEach { curTypeResFile ->
@@ -86,6 +82,10 @@ open class RenameResTask @Inject constructor(
                             }
                         }
                     }
+
+                    val allResFiles = task.project.resDirs(variantName).flatMap {
+                        it.walkTopDown().filter { file -> file.isFile }.toList()
+                    }.sortedByDescending { it.name.length }
 
                     // 1. 替换 @res/xxx
                     val oldAtRef = "@${resDirName.resType()}/$oldName"
