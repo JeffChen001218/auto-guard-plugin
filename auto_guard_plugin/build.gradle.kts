@@ -44,6 +44,10 @@ dependencies {
 //    compileOnly("cn.lalaki.AndResGuard:cn.lalaki.AndResGuard.gradle.plugin:1.5.1-final")
 
     testImplementation("junit:junit:4.13.2")
+
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.0") // 确保 Kotlin 运行时
+    implementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:1.9.0") // 关键依赖
+    implementation("org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable:1.9.0") // 额外支持解析
 }
 
 kotlin {

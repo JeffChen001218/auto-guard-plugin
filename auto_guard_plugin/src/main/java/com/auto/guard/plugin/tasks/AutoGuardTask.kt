@@ -53,7 +53,15 @@ open class AutoGuardTask @Inject constructor(
             variantName
         ).execute()
 
-        // 5. execute XmlBindingGuardTask
+        // 5. execute FixPackageDefineTask
+        FixPackageDefineTask.Proxy(
+            this,
+            project,
+            pluginParams,
+            variantName
+        ).execute()
+
+        // 6. execute XmlBindingGuardTask
         RenameResTask.Proxy(
             this,
             project,
@@ -61,7 +69,7 @@ open class AutoGuardTask @Inject constructor(
             variantName
         ).execute()
 
-        // 6. execute ChangeResMd5Task
+        // 7. execute ChangeResMd5Task
         ChangeResMd5Task.Proxy(
             this,
             project,
