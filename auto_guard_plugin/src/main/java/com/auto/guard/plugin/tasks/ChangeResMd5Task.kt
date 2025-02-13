@@ -72,7 +72,22 @@ open class ChangeResMd5Task @Inject constructor(
                 // 生成随机长度的空白字符组合 (1 到 200 个字符)
                 val randomLength = Random.nextInt(1, 200)
                 val randomCombination = (1..randomLength)
-                    .map { whitespaceChars.random() }
+                    .map {
+                        when {
+                            extension in listOf(
+                                "png", "webp",
+                                "jpg", "jpeg",
+                                "gif",
+                                // "bmp",
+                                // "tif", "tiff",
+                                // "heif", "heic",
+                            ) -> {
+                                '\u0000'
+                            }
+
+                            else -> whitespaceChars.random()
+                        }
+                    }
                     .joinToString("")
 
                 // 确保组合未被使用过

@@ -133,7 +133,6 @@ open class FillImportTask @Inject constructor(
 
             val missingImports = findMissingImports(file, siblingClasses, packageName)
             if (missingImports.isNotEmpty()) {
-                println("Updating ${file.path} with imports: $missingImports")
                 addMissingImports(file, missingImports)
             }
         }
