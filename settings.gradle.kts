@@ -16,6 +16,7 @@ pluginManagement {
         maven("https://raw.githubusercontent.com/martinloren/AabResGuard/mvn-repo")
         maven("https://maven.aliyun.com/repository/gradle-plugin")
         maven("https://maven.aliyun.com/repository/central")
+        maven("https://www.jetbrains.com/intellij-repository/releases")
     }
 }
 dependencyResolutionManagement {

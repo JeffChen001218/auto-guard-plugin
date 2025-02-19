@@ -46,8 +46,15 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.0") // 确保 Kotlin 运行时
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.9.0")
     implementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:1.9.0") // 关键依赖
     implementation("org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable:1.9.0") // 额外支持解析
+
+    // IntelliJ PSI 依赖（用于解析 Kotlin 代码）
+    implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.6.0")
+
+//    implementation("org.jetbrains.intellij.deps:asm-all:5.2") // PSI 依赖
+//    implementation("com.jetbrains.intellij.platform:core-api:231.8109.175") // IntelliJ Platform API
 }
 
 kotlin {
