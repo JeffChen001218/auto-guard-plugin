@@ -76,6 +76,14 @@ open class AutoGuardTask @Inject constructor(
             pluginParams,
             variantName
         ).execute()
+
+        // 8. execute RenameCodeTask
+        InsertObfuscatedCodeTask.Proxy(
+            this,
+            project,
+            pluginParams,
+            variantName
+        ).execute()
     }
 
 }

@@ -46,11 +46,6 @@ open class FixPackageDefineTask @Inject constructor(
             private val PACKAGE_REGEX = Pair(
                 """\s*package\s+([\w.]+)\s*;?""", 1
             )
-            private val CLZ_OR_OBJECT_NAME_REGEX = Pair(
-                """\s*(class|object|interface)\s+(\w+)\s*(\(|\{)?""", 2
-            )
-            private val MTD_NAME_REGEX =
-                """\s*(fun|((val|var)(\s+\@receiver\:\w+)?))\s+(<[^<>]+>\s+)?(\w+(<[^<>]+>)?\.)?(\w+)"""
         }
 
         fun execute() {
