@@ -19,7 +19,15 @@ open class AutoGuardTask @Inject constructor(
     fun execute() {
         val moveDirMap = project.generateMoveDirMap(pluginParams, variantName)
 
-        // 1. execute FillImportTask
+        // 9. compose Obfuscated
+        ComposeObfuscateTask.Proxy(
+            this,
+            project,
+            pluginParams,
+            variantName
+        ).execute()
+
+        // 1. execute FillImportTaskllImportTask
         FillImportTask.Proxy(
             this,
             project,
@@ -77,13 +85,14 @@ open class AutoGuardTask @Inject constructor(
             variantName
         ).execute()
 
-        // 8. execute RenameCodeTask
-        InsertObfuscatedCodeTask.Proxy(
-            this,
-            project,
-            pluginParams,
-            variantName
-        ).execute()
+//        // 8. execute RenameCodeTask
+//        InsertObfuscatedCodeTask.Proxy(
+//            this,
+//            project,
+//            pluginParams,
+//            variantName
+//        ).execute()
+
     }
 
 }

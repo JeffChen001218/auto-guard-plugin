@@ -55,7 +55,7 @@ open class InsertObfuscatedCodeTask @Inject constructor(
 
             var newContent = StringBuilder(content)
 
-            Regex("""if\s*\(""")
+            Regex("""\bif\s*\(""")
                 .findAll(content)
                 .map {
                     it.range.last + 1
@@ -68,6 +68,41 @@ open class InsertObfuscatedCodeTask @Inject constructor(
                         "${generateRandomTrueCondition(extension == "java" || extension == "aidl")}&&"
                     )
                 }
+
+            // 处理点号替换
+            val processedContent = StringBuilder()
+            val lines = newContent.toString().split("\n")
+            lines.forEachIndexed { lineIndex, line ->
+                // 检查行首是否为package或import，以及是否包含fun
+                if (line.trim().startsWith("package ") ||
+                    line.trim().startsWith("import ") ||
+                    """(^|\s+)fun\s+""".toRegex().find(line) != null ||
+                    // 检查是否包含数字后跟点号的情况
+                    """\d+\.""".toRegex().find(line) != null
+                ) {
+                    processedContent.append(line)
+                    if (lineIndex < lines.size - 1) {
+                        processedContent.append("\n")
+                    }
+                    return@forEachIndexed
+                }
+
+                // 处理当前行中的点号
+                var i = 0
+                while (i < line.length) {
+                    if (line[i] == '.' && (i == 0 || line[i - 1] != '?')) {
+                        processedContent.append("!!.")
+                        i++
+                    } else {
+                        processedContent.append(line[i])
+                        i++
+                    }
+                }
+                if (lineIndex < lines.size - 1) {
+                    processedContent.append("\n")
+                }
+            }
+            newContent = processedContent
 
             writeText(newContent.toString())
         }
