@@ -210,7 +210,11 @@ open class ComposeObfuscateTask @Inject constructor(
                                 "$newName{"
                             )
                         }
+
+                        // 更新 @旧名字 → @新名字
+                        fileContent = fileContent.replace("@${oldName}", "@${newName}")
                     }
+
 
                     ktFile.writeText(fileContent)
                 }
